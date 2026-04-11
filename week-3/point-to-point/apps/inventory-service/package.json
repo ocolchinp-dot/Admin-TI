@@ -1,0 +1,26 @@
+{
+  "name": "inventory-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "@p2p/contracts": "workspace:*",
+    "hono": "^4.7.2",
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
+    "drizzle-orm": "^0.41.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.8"
+  }
+}

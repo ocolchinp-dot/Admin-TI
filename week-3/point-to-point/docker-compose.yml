@@ -1,0 +1,91 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: p2p-postgres
+    environment:
+      POSTGRES_DB: p2p
+      POSTGRES_USER: p2p
+      POSTGRES_PASSWORD: p2p
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U p2p -d p2p"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: db-migrate
+    environment:
+      DATABASE_URL: postgres://p2p:p2p@postgres:5432/p2p
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: apps/inventory-service/Dockerfile
+    container_name: inventory-service
+    environment:
+      PORT: "3001"  
+      INVENTORY_DATABASE_URL: postgres://p2p:p2p@postgres:5432/p2p
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3001/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  orders-service:
+    build:
+      context: .
+      dockerfile: apps/orders-service/Dockerfile
+    container_name: orders-service
+    environment:
+      PORT: "3000"
+      ORDERS_DATABASE_URL: postgres://p2p:p2p@postgres:5432/p2p
+      INVENTORY_BASE_URL: http://inventory-service:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+      inventory-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  postgres-data:

@@ -1,0 +1,25 @@
+{
+  "name": "orders-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@p2p/contracts": "workspace:*",
+    "express": "^4.21.2",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.10",
+    "@types/pg": "^8.11.11",
+    "drizzle-orm": "^0.41.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.8"
+  }
+}
