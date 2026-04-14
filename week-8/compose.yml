@@ -1,18 +1,25 @@
+name: ${COMPOSE_PROJECT_NAME:-supplier-contacts}
+
 services:
   postgres:
-    image: postgres:16
-    container_name: supplier-contacts-postgres
+    image: postgres:${POSTGRES_IMAGE_TAG:-16}
     hostname: postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: metabase123
-      POSTGRES_DB: metabase
+      POSTGRES_USER: ${POSTGRES_USER:-metabase}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${METABASE_APP_DB:-metabase}
+      TZ: ${TZ:-UTC}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./data/Listado-de-proveedores-y-contactos.csv:/data/supplier-contacts.csv:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U metabase -d metabase"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-metabase} -d ${METABASE_APP_DB:-metabase}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,30 +28,26 @@ services:
       - retail_net
 
   metabase:
-    image: metabase/metabase:latest
-    container_name: supplier-contacts-metabase
+    image: metabase/metabase:${METABASE_IMAGE_TAG:-latest}
     hostname: metabase
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${METABASE_PORT:-3000}:3000"
     environment:
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: metabase
+      MB_DB_DBNAME: ${METABASE_APP_DB:-metabase}
       MB_DB_PORT: 5432
-      MB_DB_USER: metabase
-      MB_DB_PASS: metabase123
+      MB_DB_USER: ${POSTGRES_USER:-metabase}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       MB_DB_HOST: postgres
+      MB_SITE_URL: ${MB_SITE_URL:-http://localhost:3000}
+      JAVA_TIMEZONE: ${TZ:-UTC}
     volumes:
       - /dev/urandom:/dev/random:ro
       - mb_data:/metabase-data
-    healthcheck:
-      test: ["CMD-SHELL", "curl --fail -I http://localhost:3000/api/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 120s
     networks:
       - retail_net
 
