@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:17
-    container_name: online-retail-postgres
+    image: postgres:16
+    container_name: supplier-contacts-postgres
     hostname: postgres
     environment:
       POSTGRES_USER: metabase
@@ -10,7 +10,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-      - ./data/online-retail.csv:/data/online-retail.csv:ro
+      - ./data/Listado-de-proveedores-y-contactos.csv:/data/supplier-contacts.csv:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U metabase -d metabase"]
       interval: 10s
@@ -22,7 +22,7 @@ services:
 
   metabase:
     image: metabase/metabase:latest
-    container_name: online-retail-metabase
+    container_name: supplier-contacts-metabase
     hostname: metabase
     depends_on:
       postgres:
